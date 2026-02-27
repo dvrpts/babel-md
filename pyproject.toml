@@ -1,0 +1,32 @@
+[project]
+name = "babel-md"
+version = "0.1.0"
+description = "Self-hosted REST API to convert PDF/DOCX/PPTX documents to Markdown/JSON"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "python-multipart>=0.0.18",
+    "pydantic-settings>=2.7.0",
+    "docling>=2.75.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.9.0",
+    "pytest>=8.0.0",
+    "httpx>=0.28.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

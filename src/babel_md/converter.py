@@ -1,7 +1,8 @@
 from functools import lru_cache
 from io import BytesIO
+from typing import Any
 
-from docling.datamodel.base_models import DocumentStream
+from docling.datamodel.base_models import DocumentStream, InputFormat
 from docling.datamodel.pipeline_options import (
     PdfPipelineOptions,
     PictureDescriptionApiOptions,
@@ -30,7 +31,7 @@ def get_converter() -> DocumentConverter:
 
     return DocumentConverter(
         format_options={
-            "pdf": PdfFormatOption(pipeline_options=pipeline_options),
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
         }
     )
 
@@ -39,7 +40,7 @@ def convert_document(
     file_content: bytes,
     filename: str,
     output_format: OutputFormat,
-) -> str:
+) -> str | dict[str, Any]:
     converter = get_converter()
     source = DocumentStream(name=filename, stream=BytesIO(file_content))
     result = converter.convert(source)

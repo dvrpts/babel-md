@@ -29,7 +29,8 @@ async def convert_file(
     output_format: Annotated[OutputFormat, Query()] = OutputFormat.markdown,
 ) -> Response:
     filename = file.filename or "upload"
-    suffix = PurePosixPath(filename).suffix.lower()
+    path = PurePosixPath(filename)
+    suffix = path.suffix.lower()
 
     if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -47,7 +48,7 @@ async def convert_file(
             detail=f"Conversion failed: {exc}",
         ) from exc
 
-    stem = PurePosixPath(filename).stem
+    stem = path.stem
 
     if output_format == OutputFormat.json:
         body = json.dumps(content, ensure_ascii=False, indent=2)

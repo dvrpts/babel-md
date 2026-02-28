@@ -1,0 +1,8 @@
+services:
+  babel-md:
+    image: ghcr.io/dvrpts/babel-md:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    restart: unless-stopped

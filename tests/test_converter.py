@@ -30,32 +30,36 @@ class TestGetConverter:
         mock_cls.assert_called_once()
 
     def test_enables_picture_description_with_api_key(self):
+        mock_pipeline_opts = MagicMock()
+        mock_format_opt = MagicMock()
+        mock_format_opt.pipeline_options = mock_pipeline_opts
+        mock_converter = MagicMock()
+        mock_converter.format_to_options = {InputFormat.PDF: mock_format_opt}
+
         with (
             patch("babel_md.converter.settings") as mock_settings,
-            patch("babel_md.converter.DocumentConverter") as mock_cls,
+            patch("babel_md.converter.DocumentConverter", return_value=mock_converter),
         ):
             mock_settings.gemini_api_key = "test-key"
             mock_settings.gemini_base_url = "https://example.com"
             mock_settings.gemini_model = "gemini-2.5-flash"
-            mock_cls.return_value = MagicMock()
             get_converter()
 
-        call_kwargs = mock_cls.call_args[1]
-        pipeline_opts = call_kwargs["format_options"][InputFormat.PDF].pipeline_options
-        assert pipeline_opts.do_picture_description is True
+        assert mock_pipeline_opts.do_picture_description is True
+        assert mock_pipeline_opts.enable_remote_services is True
 
     def test_disables_picture_description_without_api_key(self):
+        mock_converter = MagicMock()
+        mock_converter.format_to_options = {}
+
         with (
             patch("babel_md.converter.settings") as mock_settings,
-            patch("babel_md.converter.DocumentConverter") as mock_cls,
+            patch("babel_md.converter.DocumentConverter", return_value=mock_converter),
         ):
             mock_settings.gemini_api_key = ""
-            mock_cls.return_value = MagicMock()
-            get_converter()
+            result = get_converter()
 
-        call_kwargs = mock_cls.call_args[1]
-        pipeline_opts = call_kwargs["format_options"][InputFormat.PDF].pipeline_options
-        assert pipeline_opts.do_picture_description is False
+        assert result is mock_converter
 
 
 class TestConvertDocument:

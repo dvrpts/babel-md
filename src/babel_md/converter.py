@@ -2,18 +2,12 @@ from functools import lru_cache
 from io import BytesIO
 from typing import Any
 
-from docling.datamodel.base_models import DocumentStream, InputFormat
+from docling.datamodel.base_models import DocumentStream
 from docling.datamodel.pipeline_options import (
-    ConvertPipelineOptions,
     PdfPipelineOptions,
     PictureDescriptionApiOptions,
 )
-from docling.document_converter import (
-    DocumentConverter,
-    PdfFormatOption,
-    PowerpointFormatOption,
-    WordFormatOption,
-)
+from docling.document_converter import DocumentConverter
 
 from babel_md.config import settings
 from babel_md.models import OutputFormat
@@ -21,39 +15,29 @@ from babel_md.models import OutputFormat
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".pptx", ".xlsx"}
 
 
-def _gemini_description_options() -> PictureDescriptionApiOptions:
-    return PictureDescriptionApiOptions(
+@lru_cache(maxsize=1)
+def get_converter() -> DocumentConverter:
+    converter = DocumentConverter()
+    has_api_key = bool(settings.gemini_api_key)
+
+    if not has_api_key:
+        return converter
+
+    api_opts = PictureDescriptionApiOptions(
         url=f"{settings.gemini_base_url}/chat/completions",
         params={"model": settings.gemini_model},
         headers={"Authorization": f"Bearer {settings.gemini_api_key}"},
     )
 
+    for opt in converter.format_to_options.values():
+        opts = opt.pipeline_options
+        opts.do_picture_description = True
+        opts.enable_remote_services = True
+        opts.picture_description_options = api_opts
+        if isinstance(opts, PdfPipelineOptions):
+            opts.generate_picture_images = True
 
-@lru_cache(maxsize=1)
-def get_converter() -> DocumentConverter:
-    has_api_key = bool(settings.gemini_api_key)
-
-    pdf_options = PdfPipelineOptions()
-    pdf_options.generate_picture_images = True
-    pdf_options.do_picture_description = has_api_key
-    pdf_options.enable_remote_services = has_api_key
-
-    doc_options = ConvertPipelineOptions()
-    doc_options.do_picture_description = has_api_key
-    doc_options.enable_remote_services = has_api_key
-
-    if has_api_key:
-        api_opts = _gemini_description_options()
-        pdf_options.picture_description_options = api_opts
-        doc_options.picture_description_options = api_opts
-
-    return DocumentConverter(
-        format_options={
-            InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options),
-            InputFormat.PPTX: PowerpointFormatOption(pipeline_options=doc_options),
-            InputFormat.DOCX: WordFormatOption(pipeline_options=doc_options),
-        }
-    )
+    return converter
 
 
 def convert_document(

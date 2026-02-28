@@ -13,16 +13,20 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY src/ src/
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-editable
 
 # Pre-download ML models so the runtime image doesn't need network access
-RUN uv run docling-tools models download
+# --no-sync prevents uv run from re-syncing the project as editable
+RUN uv run --no-sync docling-tools models download
 
 # ---- Runtime ----
 FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
+    libgl1 \
+    libglib2.0-0 \
+    libxcb1 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -35,6 +39,7 @@ COPY --from=builder --chown=appuser:appuser /root/.cache/docling /home/appuser/.
 
 ENV PATH="/home/appuser/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
+ENV TORCHDYNAMO_DISABLE=1
 
 EXPOSE 8000
 

@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 from babel_md.converter import ALLOWED_EXTENSIONS, convert_document, get_converter
 from babel_md.models import OutputFormat
@@ -31,6 +32,7 @@ class TestGetConverter:
 
     def test_enables_picture_description_with_api_key(self):
         mock_pipeline_opts = MagicMock()
+        mock_pipeline_opts.__class__ = PdfPipelineOptions
         mock_format_opt = MagicMock()
         mock_format_opt.pipeline_options = mock_pipeline_opts
         mock_converter = MagicMock()

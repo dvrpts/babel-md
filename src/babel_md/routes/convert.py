@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import PurePosixPath
 from typing import Annotated
 
@@ -43,6 +44,7 @@ async def convert_file(
     try:
         content = convert_document(file_content, filename, output_format)
     except Exception as exc:
+        logging.exception("Conversion failed for %s", filename)
         raise HTTPException(
             status_code=500,
             detail=f"Conversion failed: {exc}",

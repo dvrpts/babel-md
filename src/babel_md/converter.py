@@ -24,16 +24,17 @@ def get_converter() -> DocumentConverter:
 
     for opt in converter.format_to_options.values():
         opts = opt.pipeline_options
+        if not isinstance(opts, PdfPipelineOptions):
+            continue
+
         opts.do_picture_classification = True
         opts.do_chart_extraction = True
-
-        if isinstance(opts, PdfPipelineOptions):
-            opts.generate_picture_images = True
-            opts.table_structure_options = TableStructureOptions(
-                do_cell_matching=True,
-                mode=TableFormerMode.ACCURATE,
-            )
-            opts.ocr_options.lang = ["ko", "en"]
+        opts.generate_picture_images = True
+        opts.table_structure_options = TableStructureOptions(
+            do_cell_matching=True,
+            mode=TableFormerMode.ACCURATE,
+        )
+        opts.ocr_options.lang = ["ko", "en"]
 
         if has_api_key:
             opts.do_picture_description = True

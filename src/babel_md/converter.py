@@ -6,6 +6,8 @@ from docling.datamodel.base_models import DocumentStream
 from docling.datamodel.pipeline_options import (
     PdfPipelineOptions,
     PictureDescriptionApiOptions,
+    TableFormerMode,
+    TableStructureOptions,
 )
 from docling.document_converter import DocumentConverter
 
@@ -20,22 +22,27 @@ def get_converter() -> DocumentConverter:
     converter = DocumentConverter()
     has_api_key = bool(settings.gemini_api_key)
 
-    if not has_api_key:
-        return converter
-
-    api_opts = PictureDescriptionApiOptions(
-        url=f"{settings.gemini_base_url}/chat/completions",
-        params={"model": settings.gemini_model},
-        headers={"Authorization": f"Bearer {settings.gemini_api_key}"},
-    )
-
     for opt in converter.format_to_options.values():
         opts = opt.pipeline_options
-        opts.do_picture_description = True
-        opts.enable_remote_services = True
-        opts.picture_description_options = api_opts
+        opts.do_picture_classification = True
+        opts.do_chart_extraction = True
+
         if isinstance(opts, PdfPipelineOptions):
             opts.generate_picture_images = True
+            opts.table_structure_options = TableStructureOptions(
+                do_cell_matching=True,
+                mode=TableFormerMode.ACCURATE,
+            )
+            opts.ocr_options.lang = ["ko", "en"]
+
+        if has_api_key:
+            opts.do_picture_description = True
+            opts.enable_remote_services = True
+            opts.picture_description_options = PictureDescriptionApiOptions(
+                url=f"{settings.gemini_base_url}/chat/completions",
+                params={"model": settings.gemini_model},
+                headers={"Authorization": f"Bearer {settings.gemini_api_key}"},
+            )
 
     return converter
 

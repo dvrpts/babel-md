@@ -8,6 +8,7 @@ from docling.datamodel.pipeline_options import (
     PictureDescriptionApiOptions,
     TableFormerMode,
     TableStructureOptions,
+    TesseractCliOcrOptions,
 )
 from docling.document_converter import DocumentConverter
 
@@ -34,7 +35,7 @@ def get_converter() -> DocumentConverter:
             do_cell_matching=True,
             mode=TableFormerMode.ACCURATE,
         )
-        opts.ocr_options.lang = ["ko", "en"]
+        opts.ocr_options = TesseractCliOcrOptions(lang=["kor", "eng"])
 
         if has_api_key:
             opts.do_picture_description = True
